@@ -531,9 +531,16 @@ def start_bot_polling():
     """Запуск polling в отдельном daemon-потоке."""
     try:
         print("🤖 Bot polling started", flush=True)
-        bot.infinity_polling(skip_pending=True, request_timeout=60)
+        # Правильные параметры для pyTelegramBotAPI 4.23.0
+        bot.infinity_polling(
+            skip_pending=True,
+            timeout=30,              # Таймаут long polling запроса
+            long_polling_timeout=30  # Таймаут ожидания ответа
+        )
     except Exception as e:
         print(f"❌ Polling error: {e}", flush=True)
+        import traceback
+        traceback.print_exc()
 
 # Защита от повторного запуска (gunicorn может импортировать модуль несколько раз)
 if not hasattr(start_bot_polling, "_started"):
