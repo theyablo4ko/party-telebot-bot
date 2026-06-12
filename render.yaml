@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: party-bot
+    env: python
+    plan: free                 # или starter ($7/мес) — free засыпает через 15 мин без трафика!
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn bot:app --threads 2 --bind 0.0.0.0:$PORT --timeout 120
+    healthCheckPath: /health
+    envVars:
+      - key: BOT_TOKEN
+        sync: false            # введёшь в дашборде Render
+      - key: SUPERGROUP_ID
+        value: "-1003637655262"
+      - key: ACCESS_ADMINS
+        value: "6555912810,5081309603,8204500319"
+      - key: ACCESS_BLACKLIST
+        value: "7167194461,8581093935,-1003754441670"
+      - key: ACCESS_SELECTED
+        value: "777000"
+      - key: PYTHON_VERSION
+        value: 3.11.9
