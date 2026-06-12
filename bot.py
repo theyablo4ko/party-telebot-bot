@@ -524,22 +524,27 @@ def health():
     return jsonify({"status": "ok", "bot": "party-bot"})
 
 # =============================================================================
-# 🚀 ЗАПУСК
+# 🚀 ЗАПУСК БОТА (работает и при запуске через gunicorn, и через python bot.py)
 # =============================================================================
 
-def run_bot():
-    """Запуск polling в отдельном потоке."""
-    print("🤖 Bot polling started")
-    bot.infinity_polling(skip_pending=True, request_timeout=60)
+def start_bot_polling():
+    """Запуск polling в отдельном daemon-потоке."""
+    try:
+        print("🤖 Bot polling started", flush=True)
+        bot.infinity_polling(skip_pending=True, request_timeout=60)
+    except Exception as e:
+        print(f"❌ Polling error: {e}", flush=True)
 
-if __name__ == "__main__":
-    print("🤖 @editor_theyablo4ko_bot запускается...")
+# Защита от повторного запуска (gunicorn может импортировать модуль несколько раз)
+if not hasattr(start_bot_polling, "_started"):
+    print("🤖 @editor_theyablo4ko_bot запускается...", flush=True)
     ensure_dirs()
-
-    # Стартуем бота в отдельном daemon-потоке
-    bot_thread = threading.Thread(target=run_bot, daemon=True)
+    bot_thread = threading.Thread(target=start_bot_polling, daemon=True, name="bot-polling")
     bot_thread.start()
+    start_bot_polling._started = True
 
-    # Flask держит процесс живым и отдаёт health-check
-    port = int(os.environ.get("PORT", 10000))  # Render сам задаёт PORT
+# Локальный запуск (если запускаешь просто `python bot.py`)
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 10000))
+    print(f"🌐 Flask running on port {port}", flush=True)
     app.run(host="0.0.0.0", port=port)
